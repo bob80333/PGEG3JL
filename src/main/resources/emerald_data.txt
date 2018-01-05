@@ -1,0 +1,1 @@
+emerald_map_names = 0x5A0B10 // starts here, ends where the other stuff says it is

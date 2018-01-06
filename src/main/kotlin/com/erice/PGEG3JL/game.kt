@@ -1,7 +1,5 @@
 package com.erice.PGEG3JL
 
-import java.io.BufferedReader
-import java.io.FileReader
 import java.io.InputStreamReader
 
 enum class Game(val gameID: String) {
@@ -32,7 +30,7 @@ class PokeTextDecoder(val game: Game) {
     }
 
     private fun loadEmeraldDecodeTable(map: MutableMap<Byte, String>) {
-        val reader = InputStreamReader(javaClass.classLoader.getResourceAsStream("emerald_text_encoding.txt"))
+        val reader = InputStreamReader(javaClass.classLoader.getResourceAsStream("BPEE_emerald_text_encoding.txt"))
         loadDecodeTable(reader, map)
     }
 

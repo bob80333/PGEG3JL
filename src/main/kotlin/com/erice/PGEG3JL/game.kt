@@ -12,7 +12,7 @@ fun findGame(rom: Rom): Game {
 
 class PokeTextDecoder(val game: Game) {
     val textDecode = mutableMapOf<Byte, String>()
-    private val delimeter = " := "
+    private val delimiter = " := "
 
     init {
         if (game == Game.Emerald) {
@@ -20,7 +20,7 @@ class PokeTextDecoder(val game: Game) {
         }
     }
 
-    public fun decodeText(bytes: ByteArray): String {
+    fun decodeText(bytes: ByteArray): String {
         var result = ""
         for (byte in  bytes) {
             result += textDecode[byte]
@@ -37,7 +37,7 @@ class PokeTextDecoder(val game: Game) {
     private fun loadDecodeTable(reader: InputStreamReader, map: MutableMap<Byte, String>) {
         val mappings = reader.readLines()
         for (line in mappings) {
-            val halves = line.split(delimeter)
+            val halves = line.split(delimiter)
             map[byteFromHex(halves[0].substring(2))] = halves[1]
         }
     }

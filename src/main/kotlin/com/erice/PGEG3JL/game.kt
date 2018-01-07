@@ -23,7 +23,7 @@ class PokeTextDecoder(val game: Game) {
 
     fun decodeText(bytes: ByteArray): String {
         var result = ""
-        for (byte in  bytes) {
+        for (byte in bytes) {
             result += textDecode[byte]
         }
 

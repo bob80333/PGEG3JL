@@ -23,11 +23,13 @@ class Project(val name: String, val filename: String, val absoluteFolderPath: St
 
     private fun saveProjectFile() {
         val fileWriter = FileWriter(absoluteFolderPath + filename)
+
         fileWriter.write("name := $name\n")
         fileWriter.write("filename := $filename\n")
         fileWriter.write("absoluteFolderPath := $absoluteFolderPath\n")
         fileWriter.write("absoluteOriginalRomPath := $absoluteOriginalRomPath\n")
         fileWriter.write("game := ${game.gameID}")
+
         fileWriter.flush()
         fileWriter.close()
     }

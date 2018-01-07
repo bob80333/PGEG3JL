@@ -3,7 +3,8 @@ package com.erice.PGEG3JL
 import java.io.InputStreamReader
 
 enum class Game(val gameID: String) {
-    Emerald("BPEE")
+    EmeraldENG("BPEE"),
+    EmeraldJAP("BPEJ")
 }
 
 fun findGame(rom: Rom): Game {
@@ -15,7 +16,7 @@ class PokeTextDecoder(val game: Game) {
     private val delimiter = " := "
 
     init {
-        if (game == Game.Emerald) {
+        if (game == Game.EmeraldENG) {
             loadEmeraldDecodeTable(textDecode)
         }
     }

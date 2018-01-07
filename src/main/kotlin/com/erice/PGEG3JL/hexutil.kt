@@ -1,5 +1,6 @@
 package com.erice.PGEG3JL
-
+val KB = 1_024
+val MB = 1_048_576
 fun ByteArray.toAsciiString(): String {
     var asciiString = ""
     for (byte in this) {

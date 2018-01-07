@@ -13,7 +13,6 @@ fun ByteArray.toHexString(): String {
     for (byte in this) {
         hexString += byte.toString(16)
     }
-
     return hexString
 }
 

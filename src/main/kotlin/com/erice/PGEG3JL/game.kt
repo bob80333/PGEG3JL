@@ -2,13 +2,30 @@ package com.erice.PGEG3JL
 
 import java.io.InputStreamReader
 
-enum class Game(val gameID: String) {
+enum class Game(val gameId: String) {
     EmeraldENG("BPEE"),
-    EmeraldJAP("BPEJ")
+    EmeraldJPN("BPEJ"),
+    AutoDetect("AUTODETECT")
+}
+
+object CodeToGame {
+    private val byCodeHashmap: Map<String, Game>
+    init {
+        val byCodeHashmap = mutableMapOf<String, Game>()
+        for (value in Game.values()) {
+            byCodeHashmap[value.gameId] = value
+        }
+
+        this.byCodeHashmap = byCodeHashmap.toMap()
+    }
+
+    fun getGameFromCode(code: String): Game {
+        return byCodeHashmap.getOrDefault(code, Game.AutoDetect)
+    }
 }
 
 fun findGame(rom: Rom): Game {
-    return Game.valueOf(rom.getBytes(0xAC, 4).toString())
+    return CodeToGame.getGameFromCode(rom.getBytes(0xAC, 4).toAsciiString())
 }
 
 class PokeTextDecoder(val game: Game) {

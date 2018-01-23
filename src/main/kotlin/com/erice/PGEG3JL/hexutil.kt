@@ -17,6 +17,21 @@ fun ByteArray.toHexString(): String {
     return hexString
 }
 
+fun ByteArray.toInt(): Int {
+    var value = 0
+    if (this.size > 4) {
+        throw IllegalArgumentException("Cannot convert a ByteArray with more than 4 bytes to an Int")
+    }
+    for (i in 0 until this.size) {
+        if (i == 0) {
+            value = this[i].toPositiveInt()
+        }
+        value += this[i].toPositiveInt() * 256 * i
+    }
+
+    return value
+}
+
 fun Byte.toPositiveInt() = toInt() and 0xFF
 
 fun byteFromHex(hex: String) = hex.toInt(16).toByte()

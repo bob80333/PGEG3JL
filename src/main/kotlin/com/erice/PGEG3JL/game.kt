@@ -9,14 +9,14 @@ enum class Game(val gameId: String) {
 }
 
 object CodeToGame {
-    private val byCodeHashmap: Map<String, Game>
+    private val byCodeHashmap: MutableMap<String, Game>
     init {
         val byCodeHashmap = mutableMapOf<String, Game>()
         for (value in Game.values()) {
             byCodeHashmap[value.gameId] = value
         }
 
-        this.byCodeHashmap = byCodeHashmap.toMap()
+        this.byCodeHashmap = byCodeHashmap.toMutableMap()
     }
 
     fun getGameFromCode(code: String): Game {
@@ -48,7 +48,7 @@ class PokeTextDecoder(val game: Game) {
     }
 
     private fun loadEmeraldDecodeTable(map: MutableMap<Byte, String>) {
-        val reader = InputStreamReader(javaClass.classLoader.getResourceAsStream("BPEE_emerald_text_encoding.txt"))
+        val reader = InputStreamReader(javaClass.classLoader.getResourceAsStream("BPEE_text_encoding.txt"))
         loadDecodeTable(reader, map)
     }
 
@@ -60,4 +60,26 @@ class PokeTextDecoder(val game: Game) {
         }
     }
 
+}
+
+class GameData(game: Game) {
+    val data = mutableMapOf<String, String>()
+    private val delimiter = " := "
+
+    init {
+        loadData(game.gameId + "_data.txt")
+    }
+
+    private fun loadData(location: String) {
+        val reader = InputStreamReader(javaClass.classLoader.getResourceAsStream(location))
+        val lines = reader.readLines()
+        for (line in lines) {
+            val halves = line.split(delimiter)
+            data[halves[0]] = halves[1]
+        }
+    }
+
+    fun getGameDataPiece(label: String, default: String) : String {
+        return data.getOrDefault(label, default)
+    }
 }

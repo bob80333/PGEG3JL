@@ -4,6 +4,20 @@ import java.io.InputStreamReader
 
 enum class Game(val gameId: String) {
     EmeraldENG("BPEE"),
+    RubyENG("AXVE"),
+    SapphireENG("AXPE"),
+    FireRedENG("BPRE"),
+    LeafGreenENG("BPGE"),
+    EmeraldFRA("BPEF"),
+    RubyFRA("AXVF"),
+    SapphireFRA("AXPF"),
+    FireRedFRA("BPRF"),
+    LeafGreenFRA("BPGF"),
+    EmeraldITA("BPEE"),
+    RubyITA("AXVI"),
+    SapphireITA("AXPI"),
+    FireRedITA("BPRI"),
+    LeafGreenITA("BPGI"),
     EmeraldJPN("BPEJ"),
     AutoDetect("AUTODETECT")
 }

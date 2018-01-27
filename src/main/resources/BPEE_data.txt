@@ -1,2 +1,3 @@
-emerald_map_names := 0x5A0B10 :=starts here, ends where the other stuff says it is, using := > 1 time in a line means everything after is a comment
+emerald_map_names := 0x5A0B10 := starts here, ends where the other stuff says it is, using := > 1 time in a line means everything after is a comment
 bank_pointer_0 := 0x485D60
+pointer_to_map_bank_pointer_table := 0x84AA4

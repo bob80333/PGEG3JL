@@ -35,3 +35,17 @@ fun ByteArray.toInt(): Int {
 fun Byte.toPositiveInt() = toInt() and 0xFF
 
 fun byteFromHex(hex: String) = hex.toInt(16).toByte()
+
+class IntLE() {
+    var value: Int = 0
+        private set(newVal) {
+            field = newVal
+        }
+        get() {
+            return toBE()
+        }
+
+    fun toBE(): Int {
+        return value and 0xff shl 24 or (value and 0xff00 shl 8) or (value and 0xff0000 shr 8) or (value shr 24 and 0xff)
+    }
+}

@@ -36,16 +36,27 @@ fun Byte.toPositiveInt() = toInt() and 0xFF
 
 fun byteFromHex(hex: String) = hex.toInt(16).toByte()
 
-class IntLE() {
-    var value: Int = 0
+class IntLE(int: Int) {
+    var value: Int = int
         private set(newVal) {
-            field = newVal
+            field = switchEndianess(newVal)
         }
         get() {
             return toBE()
         }
 
-    fun toBE(): Int {
-        return value and 0xff shl 24 or (value and 0xff00 shl 8) or (value and 0xff0000 shr 8) or (value shr 24 and 0xff)
+    private fun toBE(): Int {
+        return switchEndianess(value)
     }
+
+    fun getLE(): Int {
+        return value
+    }
+
+    companion object {
+        fun switchEndianess(value: Int): Int {
+            return value and 0xff shl 24 or (value and 0xff00 shl 8) or (value and 0xff0000 shr 8) or (value shr 24 and 0xff)
+        }
+    }
+
 }

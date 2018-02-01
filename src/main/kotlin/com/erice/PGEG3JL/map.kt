@@ -9,23 +9,54 @@ class Map {
 
 }
 
-class MapHeader(val rom: Rom, val game: Game, bankNumber: Int) {
-    //val mapPointer: Int  // pointer to map data
-    //val eventPointer: Int //pointer to event data
-    //val scriptsPointer: Int // pointer to scripts that the map runs
-    //val connectionPointer: Int // pointer to connection data
-    //val musicIndex: Short // index for music (little endian)
-    //val mapPointerIndex?: Short // what I found says it may be a map pointer index. (little endian)
-    //val labelIndex: Byte
-    //val visibility: Byte // like a dark cave where HM flash might be needed
-    //val weather: Byte
-    //val mapType: Byte // like city, village, etc
-    //val unknown: Short //unknown, little endian.
-    //val showLabelOnEntry: Byte //show the map label on entry to the map
-    //val inBattleFieldModelId: Byte // which field background to use in battle?
+class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int) {
+    val mapPointer: Int  // pointer to map data
+    val eventPointer: Int //pointer to event data
+    val scriptsPointer: Int // pointer to scripts that the map runs
+    val connectionPointer: Int // pointer to connection data
+    val musicIndex: Short // index for music (little endian)
+    val mapPointerIndex: Short // what I found says it may be a map pointer index. (little endian)
+    val labelIndex: Byte
+    val visibility: Byte // like a dark cave where HM flash might be needed
+    val weather: Byte
+    val mapType: Byte // like city, village, etc
+    val unknown: Short //unknown, little endian.
+    val showLabelOnEntry: Byte //show the map label on entry to the map
+    val inBattleFieldModelId: Byte // which field background to use in battle?
 
     init {
         val data = GameData(game)
+
+        var offsetFromBeginning = 0
+
+        mapPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        eventPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        scriptsPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        connectionPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        musicIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toShort()
+        offsetFromBeginning += SHORT_BYTES
+
+        mapPointerIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toShort()
+        offsetFromBeginning += SHORT_BYTES
+
+        labelIndex = rom.getByte(pointer + offsetFromBeginning++)
+        visibility = rom.getByte(pointer + offsetFromBeginning++)
+        weather = rom.getByte(pointer + offsetFromBeginning++)
+        mapType = rom.getByte(pointer + offsetFromBeginning++)
+
+        unknown = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toShort()
+        offsetFromBeginning += SHORT_BYTES
+
+        showLabelOnEntry = rom.getByte(pointer + offsetFromBeginning++)
+        inBattleFieldModelId = rom.getByte(pointer + offsetFromBeginning)
     }
 }
 

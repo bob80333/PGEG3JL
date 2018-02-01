@@ -1,5 +1,6 @@
 package com.erice.PGEG3JL
 
+// Most of the information here that is in code can be found here: http://datacrystal.romhacking.net/wiki/Pokémon_3rd_Generation
 class Bank (val bankIndex: Byte, val mapIndex: Byte, val rom: Rom, val game: Game){
 
 }
@@ -29,12 +30,12 @@ class MapHeader(val rom: Rom, val game: Game, bankNumber: Int) {
 }
 
 class MapLayout(val game: Game, val rom: Rom, val pointer: Int) {
-    //val widthTiles: Int // little endian
-    //val heightTiles: Int // little endian
-    //val borderPointer: Int
-    //val mapDataPointer: Int // aka Tile Structure
-    //val globalTilesetPointer: Int
-    //val localTilesetPointer: Int
+    val widthTiles: IntLE // little endian
+    val heightTiles: IntLE  // little endian
+    val borderPointer: Int
+    val mapDataPointer: Int // aka Tile Structure
+    val globalTilesetPointer: Int
+    val localTilesetPointer: Int
 
     // border width and border height only exist in FireRed/LeafGreen, in Ruby/Sapphire/Emerald it is missing
     // and borders are always 2x2 squares
@@ -43,9 +44,29 @@ class MapLayout(val game: Game, val rom: Rom, val pointer: Int) {
     val borderHeight: Byte
 
     init {
+        var offsetFromBeginning = 0
+
+        widthTiles = IntLE(rom.getBytes(pointer + offsetFromBeginning, INT_BYTES).toInt())
+        offsetFromBeginning += INT_BYTES
+
+        heightTiles = IntLE(rom.getBytes(pointer + offsetFromBeginning, INT_BYTES).toInt())
+        offsetFromBeginning += INT_BYTES
+
+        borderPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        mapDataPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        globalTilesetPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        localTilesetPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
         if (game.gameId.startsWith("BPR") || game.gameId.startsWith("BPF")) {
-            borderWidth = rom.getByte(pointer + 24)
-            borderHeight = rom.getByte(pointer + 25)
+            borderWidth = rom.getByte(pointer + offsetFromBeginning++)
+            borderHeight = rom.getByte(pointer + offsetFromBeginning)
         } else {
             borderWidth = 2
             borderHeight = 2
@@ -73,13 +94,22 @@ class TilesetHeader(val rom: Rom) {
     //val animationPointer: Int (full size pointer), little endian, null if no animation exists
     //val behaviorAndBackgroundPointer: Int (full size pointer), little endian
 }
-
+enum class ConnectionDirection(val direction: IntLE) {
+    NoConnection(IntLE(0x0)),
+    Down(IntLE(0x1)),
+    Up(IntLE(0x2)),
+    Left(IntLE(0x3)),
+    Right(IntLE(0x4)),
+    Dive(IntLE(0x5)),
+    Emerge(IntLE(0x5));
+}
 class ConnectionData(val rom: Rom) {
-    //val connectionDirection: Int // little endian
+    //val connectionDirection: ConnectionDirection // little endian
     //val offset: Int // little endian, in reference to connecting map
     //val mapBank: Byte
     //val mapNumber: Byte
     //val filler: Short // little endian
 
     // the filler makes each piece of connection data take 12 bytes, aligning it to some better multiple of 2?
+    // the filler makes it aligned to a multiple of 4 bytes
 }

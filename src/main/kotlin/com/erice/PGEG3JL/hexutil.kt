@@ -1,6 +1,11 @@
 package com.erice.PGEG3JL
 val KB = 1_024
 val MB = 1_048_576
+
+val FULL_POINTER_BYTES = 4
+val SMALL_POINTER_BYTES = 3
+val INT_BYTES = 4
+val SHORT_BYTES = 2
 fun ByteArray.toAsciiString(): String {
     var asciiString = ""
     for (byte in this) {

@@ -130,11 +130,11 @@ class TilesetHeader(val rom: Rom, pointer: Int) {
     val isPrimary: Byte
     val unknown: Byte
     val unknown2: Byte
-    val tilesetImagePointer: Int // little endian
-    val colorPalettePointer: Int // little endian
-    val blockPointer: Int // little endian
-    val animationPointer: Int // little endian, null if no animation exists
-    val behaviorAndBackgroundPointer: Int // little endian
+    val tilesetImagePointer: IntLE // little endian
+    val colorPalettePointer: IntLE // little endian
+    val blockPointer: IntLE // little endian
+    val animationPointer: IntLE // little endian, null if no animation exists
+    val behaviorAndBackgroundPointer: IntLE // little endian
 
     init {
         var offsetFromBeginning = 0
@@ -143,19 +143,19 @@ class TilesetHeader(val rom: Rom, pointer: Int) {
         unknown = rom.getByte(pointer + offsetFromBeginning++)
         unknown2 = rom.getByte(pointer + offsetFromBeginning++)
 
-        tilesetImagePointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        tilesetImagePointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        colorPalettePointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        colorPalettePointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        blockPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        blockPointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        animationPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        animationPointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        behaviorAndBackgroundPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        behaviorAndBackgroundPointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
         offsetFromBeginning += FULL_POINTER_BYTES
     }
 }
@@ -170,7 +170,7 @@ enum class ConnectionDirection(val direction: IntLE) {
 }
 class ConnectionData(val rom: Rom) {
     //val connectionDirection: ConnectionDirection // little endian
-    //val offset: Int // little endian, in reference to connecting map
+    //val offset: IntLE // little endian, in reference to connecting map
     //val mapBank: Byte
     //val mapNumber: Byte
     //val filler: Short // little endian

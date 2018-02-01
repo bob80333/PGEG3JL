@@ -68,10 +68,9 @@ class PokeTextDecoder(val game: Game) {
 
     private fun loadDecodeTable(reader: InputStreamReader, map: MutableMap<Byte, String>) {
         val mappings = reader.readLines()
-        for (line in mappings) {
-            val halves = line.split(delimiter)
-            map[byteFromHex(halves[0].substring(2))] = halves[1]
-        }
+        mappings
+            .map { it.split(delimiter) }
+            .forEach { map[byteFromHex(it[0].substring(2))] = it[1] }
     }
 
 }
@@ -87,10 +86,9 @@ class GameData(game: Game) {
     private fun loadData(location: String) {
         val reader = InputStreamReader(javaClass.classLoader.getResourceAsStream(location))
         val lines = reader.readLines()
-        for (line in lines) {
-            val halves = line.split(delimiter)
-            data[halves[0]] = halves[1]
-        }
+        lines
+            .map { it.split(delimiter) }
+            .forEach { data[it[0]] = it[1] }
     }
 
     fun getGameDataPiece(label: String, default: String) : String {

@@ -1,13 +1,9 @@
 package com.erice.PGEG3JL
 
 // Most of the information here that is in code can be found here: http://datacrystal.romhacking.net/wiki/Pokémon_3rd_Generation
-class Bank (val bankIndex: Byte, val mapIndex: Byte, val rom: Rom, val game: Game){
+class Bank (val bankIndex: Byte, val mapIndex: Byte, val rom: Rom, val game: Game)
 
-}
-
-class Map {
-
-}
+class Map
 
 class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int) {
     val mapPointer: Int  // pointer to map data

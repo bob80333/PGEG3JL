@@ -1,11 +1,11 @@
 package com.erice.PGEG3JL
-val KB = 1_024
-val MB = 1_048_576
+const val KB = 1_024
+const val MB = 1_048_576
 
-val FULL_POINTER_BYTES = 4
-val SMALL_POINTER_BYTES = 3
-val INT_BYTES = 4
-val SHORT_BYTES = 2
+const val FULL_POINTER_BYTES = 4
+const val SMALL_POINTER_BYTES = 3
+const val INT_BYTES = 4
+const val SHORT_BYTES = 2
 fun ByteArray.toAsciiString(): String {
     var asciiString = ""
     for (byte in this) {
@@ -44,14 +44,14 @@ fun byteFromHex(hex: String) = hex.toInt(16).toByte()
 class IntLE(int: Int) {
     var value: Int = int
         private set(newVal) {
-            field = switchEndianess(newVal)
+            field = switchEndianness(newVal)
         }
         get() {
             return toBE()
         }
 
     private fun toBE(): Int {
-        return switchEndianess(value)
+        return switchEndianness(value)
     }
 
     fun getLE(): Int {
@@ -59,7 +59,7 @@ class IntLE(int: Int) {
     }
 
     companion object {
-        fun switchEndianess(value: Int): Int {
+        fun switchEndianness(value: Int): Int {
             return value and 0xff shl 24 or (value and 0xff00 shl 8) or (value and 0xff0000 shr 8) or (value shr 24 and 0xff)
         }
     }

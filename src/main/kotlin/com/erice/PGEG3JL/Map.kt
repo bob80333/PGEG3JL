@@ -1,5 +1,7 @@
 package com.erice.PGEG3JL
 
+import kotlin.experimental.and
+
 // Most of the information here that is in code can be found here: http://datacrystal.romhacking.net/wiki/Pokémon_3rd_Generation
 class Bank (val bankIndex: Byte, val mapIndex: Byte, val rom: Rom, val game: Game)
 
@@ -10,13 +12,13 @@ class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int)
     val eventPointer: Int //pointer to event data
     val scriptsPointer: Int // pointer to scripts that the map runs
     val connectionPointer: Int // pointer to connection data
-    val musicIndex: Short // index for music (little endian)
-    val mapPointerIndex: Short // what I found says it may be a map pointer index. (little endian)
+    val musicIndex: Char // index for music (little endian)
+    val mapPointerIndex: Char // what I found says it may be a map pointer index. (little endian)
     val labelIndex: Byte
     val visibility: Byte // like a dark cave where HM flash might be needed
     val weather: Byte
     val mapType: Byte // like city, village, etc
-    val unknown: Short //unknown, little endian.
+    val unknown: Char //unknown, little endian.
     val showLabelOnEntry: Byte //show the map label on entry to the map
     val inBattleFieldModelId: Byte // which field background to use in battle?
 
@@ -37,10 +39,10 @@ class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int)
         connectionPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        musicIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toShort()
+        musicIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
         offsetFromBeginning += SHORT_BYTES
 
-        mapPointerIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toShort()
+        mapPointerIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
         offsetFromBeginning += SHORT_BYTES
 
         labelIndex = rom.getByte(pointer + offsetFromBeginning++)
@@ -48,7 +50,7 @@ class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int)
         weather = rom.getByte(pointer + offsetFromBeginning++)
         mapType = rom.getByte(pointer + offsetFromBeginning++)
 
-        unknown = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toShort()
+        unknown = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
         offsetFromBeginning += SHORT_BYTES
 
         showLabelOnEntry = rom.getByte(pointer + offsetFromBeginning++)
@@ -103,11 +105,26 @@ class MapLayout(val game: Game, val rom: Rom, val pointer: Int) {
 
 data class ConnectionHeader(val mapConnectionCount: Int, val connectionDataPointer: Int) // little endian
 
-class MapData(val game: Game, val rom: Rom) {
+class MapData(val game: Game, val rom: Rom, val pointer: Int) {
     //each entry encodes tile number and attribute.  each entry is 16-bit.
     //64 attributes, 512 tiles
     // in Ruby, FireRed, and Emerald, the 16 bits are split up 6:10 instead of 8:8
     //border data is the same
+
+    val tileNum: Byte
+    val attribute: Char
+
+    init {
+        val data = rom.getBytes(pointer, 2).toInt()
+
+        if (game.gameId.startsWith("AXV") || game.gameId.startsWith("BPE") || game.gameId.startsWith("BPR")) {
+            tileNum = (data and 0xFC00).shr(10).toByte()
+            attribute = (data and 0x03FF).toChar()
+        } else {
+            tileNum = (data and 0xFF00).shr(8).toByte()
+            attribute = (data and 0x00FF).toChar()
+        }
+    }
 }
 
 class TilesetHeader(val rom: Rom) {

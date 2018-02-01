@@ -1,7 +1,5 @@
 package com.erice.PGEG3JL
 
-import kotlin.experimental.and
-
 // Most of the information here that is in code can be found here: http://datacrystal.romhacking.net/wiki/Pokémon_3rd_Generation
 class Bank (val bankIndex: Byte, val mapIndex: Byte, val rom: Rom, val game: Game)
 
@@ -111,32 +109,55 @@ class MapData(val game: Game, val rom: Rom, val pointer: Int) {
     // in Ruby, FireRed, and Emerald, the 16 bits are split up 6:10 instead of 8:8
     //border data is the same
 
-    val tileNum: Byte
-    val attribute: Char
+    val attribute: Byte
+    val tileNum: Char
 
     init {
         val data = rom.getBytes(pointer, 2).toInt()
 
         if (game.gameId.startsWith("AXV") || game.gameId.startsWith("BPE") || game.gameId.startsWith("BPR")) {
-            tileNum = (data and 0xFC00).shr(10).toByte()
-            attribute = (data and 0x03FF).toChar()
+            attribute = (data and 0xFC00).shr(10).toByte()
+            tileNum = (data and 0x03FF).toChar()
         } else {
-            tileNum = (data and 0xFF00).shr(8).toByte()
-            attribute = (data and 0x00FF).toChar()
+            attribute = (data and 0xFF00).shr(8).toByte()
+            tileNum = (data and 0x00FF).toChar()
         }
     }
 }
 
-class TilesetHeader(val rom: Rom) {
-    //val compressed: Byte
-    //val isPrimary: Byte
-    //val unknown: Byte
-    //val unknown2: Byte
-    //val tilesetImagePointer: Int (full size pointer), little endian
-    //val colorPalettePointer: Int (full size pointer), little endian
-    //val blockPointer: Int (full size pointer), little endian
-    //val animationPointer: Int (full size pointer), little endian, null if no animation exists
-    //val behaviorAndBackgroundPointer: Int (full size pointer), little endian
+class TilesetHeader(val rom: Rom, pointer: Int) {
+    val compressed: Byte
+    val isPrimary: Byte
+    val unknown: Byte
+    val unknown2: Byte
+    val tilesetImagePointer: Int // little endian
+    val colorPalettePointer: Int // little endian
+    val blockPointer: Int // little endian
+    val animationPointer: Int // little endian, null if no animation exists
+    val behaviorAndBackgroundPointer: Int // little endian
+
+    init {
+        var offsetFromBeginning = 0
+        compressed = rom.getByte(pointer + offsetFromBeginning++)
+        isPrimary = rom.getByte(pointer + offsetFromBeginning++)
+        unknown = rom.getByte(pointer + offsetFromBeginning++)
+        unknown2 = rom.getByte(pointer + offsetFromBeginning++)
+
+        tilesetImagePointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        colorPalettePointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        blockPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        animationPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+
+        behaviorAndBackgroundPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        offsetFromBeginning += FULL_POINTER_BYTES
+    }
 }
 enum class ConnectionDirection(val direction: IntLE) {
     NoConnection(IntLE(0x0)),

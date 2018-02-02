@@ -168,12 +168,41 @@ enum class ConnectionDirection(val direction: IntLE) {
     Dive(IntLE(0x5)),
     Emerge(IntLE(0x5));
 }
-class ConnectionData(val rom: Rom) {
-    //val connectionDirection: ConnectionDirection // little endian
-    //val offset: IntLE // little endian, in reference to connecting map
-    //val mapBank: Byte
-    //val mapNumber: Byte
-    //val filler: Short // little endian
+
+object ConnectionDirectionFromIntLE {
+    private val byCode = mutableMapOf<IntLE, ConnectionDirection>()
+    init {
+        for (code in ConnectionDirection.values()) {
+            byCode[code.direction] = code
+        }
+    }
+
+    fun get(code: IntLE, default: ConnectionDirection = ConnectionDirection.NoConnection): ConnectionDirection {
+        return byCode.getOrDefault(code, default)
+    }
+}
+class ConnectionData(val rom: Rom, val pointer: Int) {
+    val connectionDirection: ConnectionDirection // little endian
+    val offset: IntLE // little endian, in reference to connecting map
+    val mapBank: Byte
+    val mapNumber: Byte
+    val filler: Char // little endian
+
+    init {
+        var offsetFromBeginning = 0
+
+        connectionDirection = ConnectionDirectionFromIntLE.get(IntLE(rom.getBytes(pointer, INT_BYTES).toInt()))
+        offsetFromBeginning += INT_BYTES
+
+        offset = IntLE(rom.getBytes(pointer + offsetFromBeginning, INT_BYTES).toInt())
+        offsetFromBeginning += INT_BYTES
+
+        mapBank = rom.getByte(pointer + offsetFromBeginning++)
+        mapNumber = rom.getByte(pointer + offsetFromBeginning++)
+
+        filler = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
+        offsetFromBeginning += SHORT_BYTES
+    }
 
     // the filler makes each piece of connection data take 12 bytes, aligning it to some better multiple of 2?
     // the filler makes it aligned to a multiple of 4 bytes

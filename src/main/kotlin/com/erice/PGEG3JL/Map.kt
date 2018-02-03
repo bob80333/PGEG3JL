@@ -1,11 +1,48 @@
 package com.erice.PGEG3JL
 
 // Most of the information here that is in code can be found here: http://datacrystal.romhacking.net/wiki/Pokémon_3rd_Generation
-class Bank (val bankIndex: Byte, val mapIndex: Byte, val rom: Rom, val game: Game)
 
-class Map
+// None of the pointers here are full pointers, because they only reference data on the ROM.  In the code in the ROM,
+// the pointers will be full-length to access all the memory.
+class Bank (val bankIndex: Byte, val rom: Rom, val game: Game, val pointer: Int) {
 
-class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int) {
+}
+
+class Map(val mapIndex: Byte, val rom: Rom, val game: Game, val pointer: Int) {
+    val header: MapHeader
+    val layout: MapLayout
+    val connectionHeader: ConnectionHeader
+    val tileData: Array<MapTileData>
+    val tilesetHeader: TilesetHeader
+    val connectionData: Array<ConnectionData>
+    init {
+        header = MapHeader(rom, game, pointer)
+        layout = MapLayout(rom, game, header.mapPointer)
+        connectionHeader = ConnectionHeader(rom, game, header.connectionPointer)
+        tilesetHeader = TilesetHeader(rom, layout.localTilesetPointer)
+
+        tileData = Array(layout.heightTiles.value * layout.widthTiles.value, {MapTileData(rom, game, it, true)})
+        loadTiles(layout.heightTiles.value, layout.widthTiles.value)
+
+        connectionData = Array(connectionHeader.numConnections.value, { ConnectionData(rom, it, true) })
+        loadConnectionData(connectionHeader.numConnections.value)
+    }
+
+    private fun loadTiles(height: Int, width: Int) {
+        for (i in 0 until height * width) {
+            tileData[i] = MapTileData(rom, game, layout.mapDataPointer + (i * SHORT_BYTES))
+        }
+    }
+
+    private fun loadConnectionData(numConnections: Int) {
+        for (i in 0 until numConnections) {
+            connectionData[i] = ConnectionData(rom, pointer + (i * 12))
+        }
+    }
+
+}
+
+class MapHeader(val rom: Rom, val game: Game, val pointer: Int) {
     val mapPointer: Int  // pointer to map data
     val eventPointer: Int //pointer to event data
     val scriptsPointer: Int // pointer to scripts that the map runs
@@ -25,16 +62,16 @@ class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int)
 
         var offsetFromBeginning = 0
 
-        mapPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        mapPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        eventPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        eventPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        scriptsPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        scriptsPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        connectionPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        connectionPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
         musicIndex = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
@@ -56,7 +93,7 @@ class MapHeader(val rom: Rom, val game: Game, bankNumber: Int, val pointer: Int)
     }
 }
 
-class MapLayout(val game: Game, val rom: Rom, val pointer: Int) {
+class MapLayout(val rom: Rom, val game: Game, val pointer: Int) {
     val widthTiles: IntLE // little endian
     val heightTiles: IntLE  // little endian
     val borderPointer: Int
@@ -79,16 +116,16 @@ class MapLayout(val game: Game, val rom: Rom, val pointer: Int) {
         heightTiles = IntLE(rom.getBytes(pointer + offsetFromBeginning, INT_BYTES).toInt())
         offsetFromBeginning += INT_BYTES
 
-        borderPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        borderPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        mapDataPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        mapDataPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        globalTilesetPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        globalTilesetPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        localTilesetPointer = rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt()
+        localTilesetPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
         if (game.gameId.startsWith("BPR") || game.gameId.startsWith("BPF")) {
@@ -101,9 +138,17 @@ class MapLayout(val game: Game, val rom: Rom, val pointer: Int) {
     }
 }
 
-data class ConnectionHeader(val mapConnectionCount: Int, val connectionDataPointer: Int) // little endian
+class ConnectionHeader(val rom: Rom, val game: Game, val pointer: Int) {
+    val numConnections: IntLE = IntLE(rom.getBytes(pointer, INT_BYTES).toInt())
+    val connectionDataPointer: Int
 
-class MapData(val game: Game, val rom: Rom, val pointer: Int) {
+    init {
+        val offsetFromBeginning = INT_BYTES
+        connectionDataPointer = rom.getPointer(pointer + offsetFromBeginning)
+    }
+}
+
+class MapTileData(val rom: Rom, val game: Game, val pointer: Int, val arrayInitializer: Boolean = false) {
     //each entry encodes tile number and attribute.  each entry is 16-bit.
     //64 attributes, 512 tiles
     // in Ruby, FireRed, and Emerald, the 16 bits are split up 6:10 instead of 8:8
@@ -113,14 +158,19 @@ class MapData(val game: Game, val rom: Rom, val pointer: Int) {
     val tileNum: Char
 
     init {
-        val data = rom.getBytes(pointer, 2).toInt()
+        if (!arrayInitializer) {
+            val data = rom.getBytes(pointer, 2).toInt()
 
-        if (game.gameId.startsWith("AXV") || game.gameId.startsWith("BPE") || game.gameId.startsWith("BPR")) {
-            attribute = (data and 0xFC00).shr(10).toByte()
-            tileNum = (data and 0x03FF).toChar()
+            if (game.gameId.startsWith("AXV") || game.gameId.startsWith("BPE") || game.gameId.startsWith("BPR")) {
+                attribute = (data and 0xFC00).shr(10).toByte()
+                tileNum = (data and 0x03FF).toChar()
+            } else {
+                attribute = (data and 0xFF00).shr(8).toByte()
+                tileNum = (data and 0x00FF).toChar()
+            }
         } else {
-            attribute = (data and 0xFF00).shr(8).toByte()
-            tileNum = (data and 0x00FF).toChar()
+            attribute = 0
+            tileNum = '0'
         }
     }
 }
@@ -130,11 +180,11 @@ class TilesetHeader(val rom: Rom, pointer: Int) {
     val isPrimary: Byte
     val unknown: Byte
     val unknown2: Byte
-    val tilesetImagePointer: IntLE // little endian
-    val colorPalettePointer: IntLE // little endian
-    val blockPointer: IntLE // little endian
-    val animationPointer: IntLE // little endian, null if no animation exists
-    val behaviorAndBackgroundPointer: IntLE // little endian
+    val tilesetImagePointer: Int
+    val colorPalettePointer: Int
+    val blockPointer: Int
+    val animationPointer: Int //  null if no animation exists
+    val behaviorAndBackgroundPointer: Int
 
     init {
         var offsetFromBeginning = 0
@@ -143,19 +193,19 @@ class TilesetHeader(val rom: Rom, pointer: Int) {
         unknown = rom.getByte(pointer + offsetFromBeginning++)
         unknown2 = rom.getByte(pointer + offsetFromBeginning++)
 
-        tilesetImagePointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
+        tilesetImagePointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        colorPalettePointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
+        colorPalettePointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        blockPointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
+        blockPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        animationPointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
+        animationPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
 
-        behaviorAndBackgroundPointer = IntLE(rom.getBytes(pointer + offsetFromBeginning, FULL_POINTER_BYTES).toInt())
+        behaviorAndBackgroundPointer = rom.getPointer(pointer + offsetFromBeginning)
         offsetFromBeginning += FULL_POINTER_BYTES
     }
 }
@@ -181,7 +231,8 @@ object ConnectionDirectionFromIntLE {
         return byCode.getOrDefault(code, default)
     }
 }
-class ConnectionData(val rom: Rom, val pointer: Int) {
+
+class ConnectionData(val rom: Rom, val pointer: Int, val arrayInitializer: Boolean = false) {
     val connectionDirection: ConnectionDirection // little endian
     val offset: IntLE // little endian, in reference to connecting map
     val mapBank: Byte
@@ -189,19 +240,27 @@ class ConnectionData(val rom: Rom, val pointer: Int) {
     val filler: Char // little endian
 
     init {
-        var offsetFromBeginning = 0
+        if (!arrayInitializer) {
+            var offsetFromBeginning = 0
 
-        connectionDirection = ConnectionDirectionFromIntLE.get(IntLE(rom.getBytes(pointer, INT_BYTES).toInt()))
-        offsetFromBeginning += INT_BYTES
+            connectionDirection = ConnectionDirectionFromIntLE.get(IntLE(rom.getBytes(pointer, INT_BYTES).toInt()))
+            offsetFromBeginning += INT_BYTES
 
-        offset = IntLE(rom.getBytes(pointer + offsetFromBeginning, INT_BYTES).toInt())
-        offsetFromBeginning += INT_BYTES
+            offset = IntLE(rom.getBytes(pointer + offsetFromBeginning, INT_BYTES).toInt())
+            offsetFromBeginning += INT_BYTES
 
-        mapBank = rom.getByte(pointer + offsetFromBeginning++)
-        mapNumber = rom.getByte(pointer + offsetFromBeginning++)
+            mapBank = rom.getByte(pointer + offsetFromBeginning++)
+            mapNumber = rom.getByte(pointer + offsetFromBeginning++)
 
-        filler = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
-        offsetFromBeginning += SHORT_BYTES
+            filler = rom.getBytes(pointer + offsetFromBeginning, SHORT_BYTES).toInt().toChar()
+            offsetFromBeginning += SHORT_BYTES
+        } else {
+            connectionDirection = ConnectionDirection.NoConnection
+            offset = IntLE(0)
+            mapBank = 0
+            mapNumber = 0
+            filler = '0'
+        }
     }
 
     // the filler makes each piece of connection data take 12 bytes, aligning it to some better multiple of 2?

@@ -41,21 +41,26 @@ fun Byte.toPositiveInt() = toInt() and 0xFF
 
 fun byteFromHex(hex: String) = hex.toInt(16).toByte()
 
+fun Int.toROMPointer() = this and 0x1FFFFFF
+
+fun Int.toGBAPointer() = this or 0x08000000
+
 class IntLE(int: Int) {
     var value: Int = int
         private set(newVal) {
             field = switchEndianness(newVal)
         }
-        get() {
-            return toBE()
-        }
 
-    private fun toBE(): Int {
+    fun getLE(): Int {
         return switchEndianness(value)
     }
 
-    fun getLE(): Int {
-        return value
+    fun toROMPointer(): Int {
+        return value.toROMPointer()
+    }
+
+    fun toGBAPointer(): Int {
+        return value.toGBAPointer()
     }
 
     companion object {

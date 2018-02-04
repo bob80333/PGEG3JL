@@ -1,6 +1,8 @@
+comment1 := Thanks to Gamer2020 and ShinyQuagsire23 for their INI files and the examples their code provided
 emerald_map_names := 0x5A0B10 := starts here, ends where the other stuff says it is, using := > 1 time in a line means everything after is a comment
 bank_pointer_0 := 0x485D60
 pointer_to_map_bank_pointer_table := 0x84AA4
 num_banks := 0x22
-bank_0_map_0_connection_pointer := 0x4866EC := may be right or wrong idk
+num_maps_bank := 57,5,5,6,7,8,9,7,7,14,8,17,10,23,13,15,15,2,2,2,3,1,1,1,108,61,89,2,1,13,1,1,2,1
+bank_0_map_0_connection_pointer := 0x4866EC := may be right or wrong idks
 bank_0_map_0_connection_data_pointer := 0x4866D4 := may be wrong or right idk

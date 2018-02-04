@@ -4,11 +4,25 @@ package com.erice.PGEG3JL
 
 // None of the pointers here are full pointers, because they only reference data on the ROM.  In the code in the ROM,
 // the pointers will be full-length to access all the memory.
-class Bank (val bankIndex: Byte, val rom: Rom, val game: Game, val pointer: Int) {
-
+class Banks(val rom: Rom, val game: Game, gameData: GameData) {
+    val banks: Array<Bank>
+    init {
+        val bankListPointer = gameData.getGameDataPiece("pointer_to_map_bank_pointer_table", "0x0").substring(1).toInt()
+        val numBanks = gameData.getGameDataPiece("num_banks", "0x0").substring(1).toInt()
+        banks = Array(numBanks, {Bank(it, rom, game, rom.getPointer(bankListPointer + (it * 4)), gameData)})
+    }
 }
 
-class Map(val mapIndex: Byte, val rom: Rom, val game: Game, val pointer: Int) {
+class Bank (val bankIndex: Int, val rom: Rom, val game: Game, val pointer: Int, gameData: GameData) {
+    val numMaps: Int
+    val maps: Array<Map>
+    init {
+        numMaps = gameData.getGameDataPiece("num_maps_bank", "0").split(",")[bankIndex].toInt()
+        maps = Array(numMaps, {Map(it, rom, game, rom.getPointer(pointer + (it * 4)))})
+    }
+}
+
+class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int) {
     val header: MapHeader
     val layout: MapLayout
     val connectionHeader: ConnectionHeader
@@ -25,7 +39,7 @@ class Map(val mapIndex: Byte, val rom: Rom, val game: Game, val pointer: Int) {
         loadTiles(layout.heightTiles.value, layout.widthTiles.value)
 
         connectionData = Array(connectionHeader.numConnections.value, { ConnectionData(rom, it, true) })
-        loadConnectionData(connectionHeader.numConnections.value)
+        loadConnectionData(connectionHeader.numConnections.value, connectionHeader.pointer)
     }
 
     private fun loadTiles(height: Int, width: Int) {
@@ -34,7 +48,7 @@ class Map(val mapIndex: Byte, val rom: Rom, val game: Game, val pointer: Int) {
         }
     }
 
-    private fun loadConnectionData(numConnections: Int) {
+    private fun loadConnectionData(numConnections: Int, connectionPointer: Int) {
         for (i in 0 until numConnections) {
             connectionData[i] = ConnectionData(rom, pointer + (i * 12))
         }

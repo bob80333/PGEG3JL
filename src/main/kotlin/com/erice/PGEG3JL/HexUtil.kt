@@ -31,7 +31,7 @@ fun ByteArray.toInt(): Int {
         if (i == 0) {
             value = this[i].toPositiveInt()
         }
-        value += this[i].toPositiveInt() * 256 * i
+        value = this[i].toPositiveInt() + (value * 256)
     }
 
     return value
@@ -50,9 +50,12 @@ class IntLE(int: Int) {
         private set(newVal) {
             field = switchEndianness(newVal)
         }
+    get() {
+        return switchEndianness(field)
+    }
 
     fun getLE(): Int {
-        return switchEndianness(value)
+        return value
     }
 
     fun toROMPointer(): Int {

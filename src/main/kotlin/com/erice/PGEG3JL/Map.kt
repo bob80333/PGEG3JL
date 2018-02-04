@@ -7,9 +7,9 @@ package com.erice.PGEG3JL
 class Banks(val rom: Rom, val game: Game, gameData: GameData) {
     val banks: Array<Bank>
     init {
-        val bankListPointer = gameData.getGameDataPiece("pointer_to_map_bank_pointer_table", "0x0").substring(1).toInt()
-        val numBanks = gameData.getGameDataPiece("num_banks", "0x0").substring(1).toInt()
-        banks = Array(numBanks, {Bank(it, rom, game, rom.getPointer(bankListPointer + (it * 4)), gameData)})
+        val bankListPointer = gameData.getGameDataPiece("pointer_to_map_bank_pointer_table", "0x0").substring(2).toInt(16)
+        val numBanks = gameData.getGameDataPiece("num_banks", "0x0").substring(2).toInt(16)
+        banks = Array(numBanks, {Bank(it, rom, game, rom.getPointer(bankListPointer) + (it * 4), gameData)})
     }
 }
 
@@ -18,7 +18,7 @@ class Bank (val bankIndex: Int, val rom: Rom, val game: Game, val pointer: Int, 
     val maps: Array<Map>
     init {
         numMaps = gameData.getGameDataPiece("num_maps_bank", "0").split(",")[bankIndex].toInt()
-        maps = Array(numMaps, {Map(it, rom, game, rom.getPointer(pointer + (it * 4)))})
+        maps = Array(numMaps, {Map(it, rom, game, rom.getPointer(pointer) + (it * 4))})
     }
 }
 
@@ -27,19 +27,26 @@ class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int) {
     val layout: MapLayout
     val connectionHeader: ConnectionHeader
     val tileData: Array<MapTileData>
-    val tilesetHeader: TilesetHeader
+    val globalTileset: TilesetHeader
+    val localTileset: TilesetHeader
     val connectionData: Array<ConnectionData>
     init {
-        header = MapHeader(rom, game, pointer)
+        header = MapHeader(rom, game, rom.getPointer(pointer))
         layout = MapLayout(rom, game, header.mapPointer)
         connectionHeader = ConnectionHeader(rom, game, header.connectionPointer)
-        tilesetHeader = TilesetHeader(rom, layout.localTilesetPointer)
+        globalTileset = TilesetHeader(rom, layout.globalTilesetPointer.toROMPointer())
+        localTileset = TilesetHeader(rom, layout.localTilesetPointer.toROMPointer())
 
         tileData = Array(layout.heightTiles.value * layout.widthTiles.value, {MapTileData(rom, game, it, true)})
         loadTiles(layout.heightTiles.value, layout.widthTiles.value)
 
-        connectionData = Array(connectionHeader.numConnections.value, { ConnectionData(rom, it, true) })
-        loadConnectionData(connectionHeader.numConnections.value, connectionHeader.pointer)
+
+        if (connectionHeader.pointer != 0) {
+            connectionData = Array(connectionHeader.numConnections.getLE(), { ConnectionData(rom, it, true) })
+            loadConnectionData(connectionHeader.numConnections.value, connectionHeader.pointer)
+        } else {
+            connectionData = Array(0, { ConnectionData(rom, it, true) })
+        }
     }
 
     private fun loadTiles(height: Int, width: Int) {
@@ -50,7 +57,7 @@ class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int) {
 
     private fun loadConnectionData(numConnections: Int, connectionPointer: Int) {
         for (i in 0 until numConnections) {
-            connectionData[i] = ConnectionData(rom, pointer + (i * 12))
+            connectionData[i] = ConnectionData(rom, connectionPointer + (i * 12))
         }
     }
 

@@ -55,10 +55,28 @@ class PokeTextDecoder(val game: Game) {
     fun decodeText(bytes: ByteArray): String {
         var result = ""
         for (byte in bytes) {
+            if (byte.toString(16) == "FF") {
+                return result
+            }
             result += textDecode[byte]
         }
 
         return result
+    }
+
+    fun decodeStrings(bytes: ByteArray): MutableList<String> {
+        val outputList = mutableListOf<String>()
+        var string = ""
+        bytes.forEach {
+            if (it == byteFromHex("FF")) {
+                outputList.add(string)
+                string = ""
+            } else {
+                string += textDecode[it]
+            }
+        }
+
+        return outputList
     }
 
     private fun loadEmeraldDecodeTable(map: MutableMap<Byte, String>) {

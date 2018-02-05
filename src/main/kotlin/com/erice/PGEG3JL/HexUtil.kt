@@ -37,6 +37,15 @@ fun ByteArray.toInt(): Int {
     return value
 }
 
+fun byteArrayFromHex(hex: String): ByteArray {
+    val byteArray = ByteArray(hex.length / 2)
+    for (i in 0 until hex.length step 2) {
+        byteArray[i/2] = byteFromHex(hex[i].toString() + hex[i + 1].toString())
+    }
+
+    return byteArray
+}
+
 fun Byte.toPositiveInt() = toInt() and 0xFF
 
 fun byteFromHex(hex: String) = hex.toInt(16).toByte()

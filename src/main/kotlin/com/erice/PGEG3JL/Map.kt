@@ -6,23 +6,37 @@ package com.erice.PGEG3JL
 // the pointers will be full-length to access all the memory.
 class Banks(val rom: Rom, val game: Game, gameData: GameData) {
     val banks: Array<Bank>
+    val mapNames: Array<String>
     init {
+        val mapNamesPointer = gameData.getGameDataPiece("map_names", "0x0").substring(2).toInt(16)
+        val mapNamesLength = gameData.getGameDataPiece("map_names_length", "0").toInt()
+        mapNames = Array(mapNamesLength, {""})
+        loadMapNames(mapNamesPointer, mapNamesLength)
+
         val bankListPointer = gameData.getGameDataPiece("pointer_to_map_bank_pointer_table", "0x0").substring(2).toInt(16)
         val numBanks = gameData.getGameDataPiece("num_banks", "0x0").substring(2).toInt(16)
-        banks = Array(numBanks, {Bank(it, rom, game, rom.getPointer(bankListPointer) + (it * 4), gameData)})
+        banks = Array(numBanks, {Bank(it, rom, game, rom.getPointer(bankListPointer) + (it * 4), gameData, mapNames)})
+    }
+
+    private fun loadMapNames(pointer: Int, length: Int) {
+        val data = rom.getBytes(pointer, length)
+        val textDecoder = PokeTextDecoder(game)
+        textDecoder.decodeStrings(data).forEachIndexed { index, s ->
+            mapNames[index] = s
+        }
     }
 }
 
-class Bank (val bankIndex: Int, val rom: Rom, val game: Game, val pointer: Int, gameData: GameData) {
+class Bank (val bankIndex: Int, val rom: Rom, val game: Game, val pointer: Int, gameData: GameData, val mapNames: Array<String>) {
     val numMaps: Int
     val maps: Array<Map>
     init {
         numMaps = gameData.getGameDataPiece("num_maps_bank", "0").split(",")[bankIndex].toInt()
-        maps = Array(numMaps, {Map(it, rom, game, rom.getPointer(pointer) + (it * 4))})
+        maps = Array(numMaps, {Map(it, rom, game, rom.getPointer(pointer) + (it * 4), mapNames)})
     }
 }
 
-class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int) {
+class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int, val mapNames: Array<String>) {
     val header: MapHeader
     val layout: MapLayout
     val connectionHeader: ConnectionHeader
@@ -30,6 +44,7 @@ class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int) {
     val globalTileset: TilesetHeader
     val localTileset: TilesetHeader
     val connectionData: Array<ConnectionData>
+    val name: String
     init {
         header = MapHeader(rom, game, rom.getPointer(pointer))
         layout = MapLayout(rom, game, header.mapPointer)
@@ -47,6 +62,8 @@ class Map(val mapIndex: Int, val rom: Rom, val game: Game, val pointer: Int) {
         } else {
             connectionData = Array(0, { ConnectionData(rom, it, true) })
         }
+
+        name = mapNames[header.labelIndex.toPositiveInt()]
     }
 
     private fun loadTiles(height: Int, width: Int) {

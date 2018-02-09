@@ -319,7 +319,7 @@ fun main(args: Array<String>) {
     val banks = Banks(rom, game, gameData)
 
     banks.banks.forEach {
-        it.maps.filter { it.localTileset.compressed.toPositiveInt() == 0 || it.globalTileset.compressed.toPositiveInt() == 0 }
+        it.maps.filter { it.globalTileset.compressed.toPositiveInt() == 0 }
                 .forEach {
                     println(it.globalTileset.tilesetImagePointer.toHexString())
                     println(it.globalTileset.colorPalettePointer.toHexString())

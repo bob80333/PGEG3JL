@@ -40,7 +40,8 @@ fun ByteArray.toInt(): Int {
 fun ByteArray.toLong(): Long {
     var value = 0L
     if (this.size > 8) {
-        throw IllegalArgumentException("Cannot convert a ByteArray with more than 4 bytes to an Int")
+        println(this.size)
+        throw IllegalArgumentException("Cannot convert a ByteArray with more than 8 bytes to an Long")
     }
     for (i in 0 until this.size) {
         if (i == 0) {
@@ -52,6 +53,21 @@ fun ByteArray.toLong(): Long {
     return value
 }
 
+fun ByteArray.toIntArray(): IntArray {
+    val intArray = IntArray(this.size)
+    this.forEachIndexed{ index, byte ->
+        intArray[index] = byte.toPositiveInt()
+    }
+
+    return intArray
+}
+
+fun IntArray.toLong() : Long {
+    if (this.size > 2) {
+        throw IllegalArgumentException("Cannot convert an IntArray with more than 2 ints to an Long")
+    }
+    return (this[0].toLong() + (this[1].toLong() shl 8))
+}
 fun byteArrayFromHex(hex: String): ByteArray {
     val byteArray = ByteArray(hex.length / 2)
     for (i in 0 until hex.length step 2) {

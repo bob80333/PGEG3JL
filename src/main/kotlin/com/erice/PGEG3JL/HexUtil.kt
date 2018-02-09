@@ -69,6 +69,7 @@ fun Int.toROMPointer() = this and 0x1FFFFFF
 
 fun Int.toGBAPointer() = this or 0x08000000
 
+fun Int.toHexString() = "0x" + this.toString(16)
 class IntLE(int: Int) {
     var value: Int = int
         private set(newVal) {

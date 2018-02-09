@@ -2,8 +2,50 @@ package com.erice.PGEG3JL
 
 import javafx.geometry.Point2D
 import java.awt.Color
+import java.awt.image.BufferedImage
 
-class Image(imageData: ByteArray, palette: Palette, desiredSize: Point2D, originalSize: Point2D) {
+//todo test with this
+//0x34fb84 -image
+//0x3508bc -palettepointer
+
+class Image(val imageData: ByteArray, val palette: Palette, val desiredSize: Point2D, val originalSize: Point2D) {
+    fun get16ColorImage(transparency: Boolean): BufferedImage  {
+        val image  = BufferedImage(originalSize.x.toInt(), originalSize.y.toInt(), BufferedImage.TYPE_INT_ARGB)
+        var x = -1
+        var y = 0
+        var blockx = 0
+        var blocky = 0
+        for (i in 0 until imageData.size * 2) {
+            if (x > 7) {
+                x = 0
+                y++
+            }
+
+            if(y > 7) {
+                y = 0
+                blockx++
+            }
+            if (blockx > (image.getWidth() / 8) - 1) {
+                blockx = 0
+                blocky++
+            }
+            var paletteIndex = imageData[i/2].toInt()
+            if ((i and 1 ) == 0) {
+                paletteIndex = paletteIndex and 0xF
+            } else {
+                paletteIndex = (paletteIndex and 0xF0) shr 4
+            }
+
+            val color = IntArray(4)
+            color[0] = palette.reds[paletteIndex].toInt()
+            color[1] = palette.greens[paletteIndex].toInt()
+            color[2] = palette.blues[paletteIndex].toInt()
+            color[3] = if (transparency && paletteIndex == 0) 0 else 255
+            image.raster.setPixel(x + (blockx * 8), y + (blocky * 8), color)
+        }
+
+        return image
+    }
 
 }
 

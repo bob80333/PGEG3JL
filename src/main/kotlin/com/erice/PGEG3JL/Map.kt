@@ -1,5 +1,8 @@
 package com.erice.PGEG3JL
 
+import java.io.File
+import java.io.FileInputStream
+
 // Most of the information here that is in code can be found here: http://datacrystal.romhacking.net/wiki/Pokémon_3rd_Generation
 
 // None of the pointers here are full pointers, because they only reference data on the ROM.  In the code in the ROM,
@@ -303,4 +306,25 @@ class ConnectionData(val rom: Rom, val pointer: Int, val arrayInitializer: Boole
 
     // the filler makes each piece of connection data take 12 bytes, aligning it to some better multiple of 2?
     // the filler makes it aligned to a multiple of 4 bytes
+}
+
+fun main(args: Array<String>) {
+    val romFile = FileInputStream(File("E:\\Downloads\\1986 - Pokemon Emerald (U)(TrashMan)\\1986 - Pokemon Emerald (U)(TrashMan).gba"))
+    val romData = ByteArray(16 * MB)
+    romFile.read(romData)
+    val game = Game.EmeraldENG
+    val gameData = GameData(game)
+
+    val rom = Rom("emerald", romData)
+    val banks = Banks(rom, game, gameData)
+
+    banks.banks.forEach {
+        it.maps.filter { it.localTileset.compressed.toPositiveInt() == 0 || it.globalTileset.compressed.toPositiveInt() == 0 }
+                .forEach {
+                    println(it.globalTileset.tilesetImagePointer.toHexString())
+                    println(it.globalTileset.colorPalettePointer.toHexString())
+                    println(it.localTileset.tilesetImagePointer.toHexString())
+                    println(it.localTileset.colorPalettePointer.toHexString())
+                }
+    }
 }

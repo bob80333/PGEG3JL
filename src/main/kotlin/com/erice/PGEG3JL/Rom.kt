@@ -1,6 +1,6 @@
 package com.erice.PGEG3JL
 
-class Rom (val name: String, private val rom: ByteArray) {
+class Rom (val name: String, val rom: ByteArray) {
 
     fun getByte(pointer: Int): Byte {
         return rom[pointer]

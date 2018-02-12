@@ -250,6 +250,10 @@ class TilesetHeader(val rom: Rom, pointer: Int) {
         offsetFromBeginning += FULL_POINTER_BYTES
     }
 }
+
+class Tileset(val mapLayout: MapLayout, val tilesetHeader: TilesetHeader, val rom: Rom) {
+
+}
 enum class ConnectionDirection(val direction: IntLE) {
     NoConnection(IntLE(0x0)),
     Down(IntLE(0x1)),

@@ -6,6 +6,8 @@ const val FULL_POINTER_BYTES = 4
 const val SMALL_POINTER_BYTES = 3
 const val INT_BYTES = 4
 const val SHORT_BYTES = 2
+
+// Creates a string where each byte is turned into its associated ASCII character value
 fun ByteArray.toAsciiString(): String {
     var asciiString = ""
     for (byte in this) {
@@ -14,6 +16,7 @@ fun ByteArray.toAsciiString(): String {
     return asciiString
 }
 
+// Creates a string of the byte array in hex, appending "0x" to signify hex at the start
 fun ByteArray.toHexString(): String {
     var hexString = "0x"
     for (byte in this) {
@@ -22,6 +25,7 @@ fun ByteArray.toHexString(): String {
     return hexString
 }
 
+// Turns a ByteArray when size <= 4 into an integer
 fun ByteArray.toInt(): Int {
     var value = 0
     if (this.size > 4) {
@@ -68,6 +72,8 @@ fun IntArray.toLong() : Long {
     }
     return (this[0].toLong() + (this[1].toLong() shl 8))
 }
+
+// Turns a hex string (assuming no "0x" header) into a ByteArray
 fun byteArrayFromHex(hex: String): ByteArray {
     val byteArray = ByteArray(hex.length / 2)
     for (i in 0 until hex.length step 2) {
@@ -81,8 +87,10 @@ fun Byte.toPositiveInt() = toInt() and 0xFF
 
 fun byteFromHex(hex: String) = hex.toInt(16).toByte()
 
+// Returns a pointer relative to the ROM file
 fun Int.toROMPointer() = this and 0x1FFFFFF
 
+// Returns a pointer relative to where the ROM is in the GBA RAM (starting at 0x08000000 in RAM)
 fun Int.toGBAPointer() = this or 0x08000000
 
 fun Int.toHexString() = "0x" + this.toString(16)

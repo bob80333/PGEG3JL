@@ -25,7 +25,9 @@ fun ByteArray.toHexString(): String {
     return hexString
 }
 
-// Turns a ByteArray when size <= 4 into an integer
+/**
+ * Returns an Int created from a ByteArray if there are less than 4 bytes
+ */
 fun ByteArray.toInt(): Int {
     var value = 0
     if (this.size > 4) {

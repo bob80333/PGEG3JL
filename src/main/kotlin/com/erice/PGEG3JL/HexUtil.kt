@@ -16,7 +16,9 @@ fun ByteArray.toAsciiString(): String {
     return asciiString
 }
 
-// Creates a string of the byte array in hex, appending "0x" to signify hex at the start
+/**
+ * Creates a string of bytes in base-16 encoding from the ByteArray, appending "0x" to signify the base-16 encoding
+ */
 fun ByteArray.toHexString(): String {
     var hexString = "0x"
     for (byte in this) {
@@ -26,7 +28,7 @@ fun ByteArray.toHexString(): String {
 }
 
 /**
- * Returns an Int created from a ByteArray if there are less than 4 bytes
+ * Returns an Int created from a ByteArray if there are less than or exactly 4 bytes
  */
 fun ByteArray.toInt(): Int {
     var value = 0
@@ -43,6 +45,9 @@ fun ByteArray.toInt(): Int {
     return value
 }
 
+/**
+ * Returns an Long created from a ByteArray if there are less than or exactly 8 bytes
+ */
 fun ByteArray.toLong(): Long {
     var value = 0L
     if (this.size > 8) {

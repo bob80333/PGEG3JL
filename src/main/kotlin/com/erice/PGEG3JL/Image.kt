@@ -95,7 +95,7 @@ enum class ImageType {
     Palette256Color
 }
 
-class Palette(type: ImageType, paletteData: ByteArray) {
+class Palette(type: ImageType, val paletteData: ByteArray) {
     val colors: Array<Color>
     val reds: ByteArray
     val greens: ByteArray
@@ -113,21 +113,22 @@ class Palette(type: ImageType, paletteData: ByteArray) {
             greens = ByteArray(256)
             blues = ByteArray(256)
         }
+    }
 
+    fun setupPal() {
         for (i in 0 until paletteData.size step 2) {
             val color = paletteData.slice(i..i+1)
-                    .toByteArray().toIntArray()
-                    .toLong()
-            //println("C" + color)
+                .toByteArray().toIntArray()
+                .toLong()
+
             val r = ((color and 0x1F) shl 3).toInt()
             val g = ((color and 0x3E0) shr 2).toInt()
             val b = ((color and 0x7C00) shr 7).toInt()
+
             reds[i/2] = r.toByte()
             greens[i/2] = g.toByte()
             blues[i/2] = b.toByte()
-            //println("R" + r)
-            //println("G" + g)
-            //println("B" + b)
+
             colors[i/2] = Color(r, g, b)
         }
     }
@@ -139,6 +140,14 @@ fun main(args: Array<String>) {
     val palette = "CA 2A 13 7B 4D 66 C8 55 77 7F DF 2A 3C 1A 99 09 59 7E E7 1C 52 4E 8C 31 4A 29 CE 39 F7 62 BD 7F"
     val paletteData = palette.split(" ").map { Integer.parseInt(it, 16).toByte() }.toByteArray()
     val pal = Palette(ImageType.Palette16Color, paletteData)
+    val palTimeStart = System.nanoTime()
+    pal.setupPal()
+    val palTimeEnd = System.nanoTime()
     val im = Image(imageData, pal, Point2D(16.0, 16.0), Point2D(128.0, 256.0))
-    ImageIO.write(im.get16ColorImageCopy(false), "png", File("C:\\Users\\bob80\\Desktop\\image.png"))
+    val imBufTimeStart = System.nanoTime()
+    val imageBuf = im.get16ColorImage(false)
+    val imBufTimeEnd = System.nanoTime()
+    ImageIO.write(imageBuf, "png", File("C:\\Users\\0611040374\\Desktop\\image.png"))
+    println("Pal Time: " + (palTimeEnd - palTimeStart) / 1_000_000.0)
+    println("Img Time: " + (imBufTimeEnd - imBufTimeStart) / 1_000_000.0)
 }
